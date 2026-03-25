@@ -1,0 +1,266 @@
+import 'package:flutter/material.dart';
+import 'dart:math';
+
+void main() {
+  runApp(MyApp());
+}
+
+enum Feature {
+  simple,
+  compound,
+  compoundMonth,
+}
+
+//  VẼ BIỂU ĐỒ TRÒN
+class PieChartPainter extends CustomPainter {
+  final List<double> data;
+
+  PieChartPainter(this.data);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
+    double total = data.reduce((a, b) => a + b);
+    double startAngle = -pi / 2;
+
+    final colors = [
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.red,
+      Colors.purple,
+      Colors.teal,
+    ];
+
+    for (int i = 0; i < data.length; i++) {
+      final sweepAngle = (data[i] / total) * 2 * pi;
+
+      final paint = Paint()
+        ..color = colors[i % colors.length]
+        ..style = PaintingStyle.fill;
+
+      canvas.drawArc(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        startAngle,
+        sweepAngle,
+        true,
+        paint,
+      );
+
+      startAngle += sweepAngle;
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => true;
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  Feature current = Feature.simple;
+
+  final P = TextEditingController();
+  final r = TextEditingController();
+  final t = TextEditingController();
+
+  double result = 0;
+  List<double> chartData = [];
+
+  void calculate() {
+    double p = double.tryParse(P.text) ?? 0;
+    double rate = (double.tryParse(r.text) ?? 0) / 100;
+    double time = double.tryParse(t.text) ?? 0;
+
+    chartData.clear();
+
+    setState(() {
+      switch (current) {
+        case Feature.simple:
+          result = p * (1 + rate * time);
+          break;
+
+        case Feature.compound:
+          result = p * pow((1 + rate), time);
+          break;
+
+        case Feature.compoundMonth:
+          result = p * pow((1 + rate / 12), 12 * time);
+          break;
+      }
+
+      // dữ liệu biểu đồ theo từng năm
+      for (int i = 1; i <= time; i++) {
+        chartData.add(p * pow((1 + rate), i));
+      }
+    });
+  }
+
+  String getTitle() {
+    switch (current) {
+      case Feature.simple:
+        return "Lãi đơn";
+      case Feature.compound:
+        return "Lãi kép";
+      case Feature.compoundMonth:
+        return "Lãi kép theo tháng";
+    }
+  }
+
+  //  BIỂU ĐỒ TRÒN
+  Widget buildChart() {
+    if (chartData.isEmpty) return Container();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Biểu đồ tròn theo năm",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+
+        SizedBox(height: 20),
+
+        Center(
+          child: CustomPaint(
+            size: Size(200, 200),
+            painter: PieChartPainter(chartData),
+          ),
+        ),
+
+        SizedBox(height: 20),
+
+        // chú thích
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: chartData.asMap().entries.map((entry) {
+            int year = entry.key + 1;
+            double value = entry.value;
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    margin: EdgeInsets.only(right: 8),
+                    color: Colors.primaries[
+                        entry.key % Colors.primaries.length],
+                  ),
+                  Text("Năm $year: ${value.toStringAsFixed(0)}"),
+                ],
+              ),
+            );
+          }).toList(),
+        )
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("máy tính lãi xuất")),
+
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: Text("Menu",
+                  style: TextStyle(color: Colors.white, fontSize: 20)),
+            ),
+            buildItem("Lãi đơn", Feature.simple),
+            buildItem("Lãi kép", Feature.compound),
+            buildItem("Lãi kép theo tháng", Feature.compoundMonth),
+          ],
+        ),
+      ),
+
+      body: Container(
+        padding: EdgeInsets.all(16),
+        child: Card(
+          elevation: 5,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: ListView(
+              children: [
+                Text(getTitle(),
+                    style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold)),
+
+                SizedBox(height: 20),
+
+                TextField(
+                  controller: P,
+                  decoration:
+                      InputDecoration(labelText: "Số tiền (P)"),
+                  keyboardType: TextInputType.number,
+                ),
+                TextField(
+                  controller: r,
+                  decoration:
+                      InputDecoration(labelText: "Lãi suất (%)"),
+                  keyboardType: TextInputType.number,
+                ),
+                TextField(
+                  controller: t,
+                  decoration:
+                      InputDecoration(labelText: "Thời gian (năm)"),
+                  keyboardType: TextInputType.number,
+                ),
+
+                SizedBox(height: 20),
+
+                ElevatedButton(
+                  onPressed: calculate,
+                  child: Text("Tính toán"),
+                ),
+
+                SizedBox(height: 20),
+
+                Text(
+                  "Kết quả: ${result.toStringAsFixed(2)}",
+                  style: TextStyle(fontSize: 20),
+                ),
+
+                SizedBox(height: 20),
+
+                buildChart(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildItem(String title, Feature f) {
+    return ListTile(
+      title: Text(title),
+      onTap: () {
+        setState(() => current = f);
+        Navigator.pop(context);
+      },
+    );
+  }
+}
