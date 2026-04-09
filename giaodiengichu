@@ -1,0 +1,186 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: HomeScreen(),
+    );
+  }
+}
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int soBaiViet = 0;
+  int soYeuThich = 0;
+  int currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xffFFF0F5),
+
+      body: SafeArea(
+        child: SingleChildScrollView( // ✅ FIX OVERFLOW
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Chào buổi sáng 🌸",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.pinkAccent,
+                    height: 1.2,
+                  ),
+                ),
+
+                const SizedBox(height: 4),
+
+                const Text(
+                  "Nhật ký của tui 🐼💗",
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.pink,
+                    height: 1.2,
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    _buildCuteBox(Icons.menu_book, "$soBaiViet bài viết"),
+                    const SizedBox(width: 8),
+                    _buildCuteBox(Icons.favorite, "$soYeuThich yêu thích"),
+                  ],
+                ),
+
+                const SizedBox(height: 30),
+
+                Center(
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.pink.shade100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Text(
+                          "🐼",
+                          style: TextStyle(fontSize: 40),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      const Text(
+                        "Chưa có nhật ký nào 🥺",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.pink,
+                          height: 1.2,
+                        ),
+                      ),
+
+                      const SizedBox(height: 5),
+
+                      const Text(
+                        "Bấm ✏️ để viết nhật ký đầu tiên nha 💕",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.grey,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 80), // tránh bị che bởi bottom bar
+              ],
+            ),
+          ),
+        ),
+      ),
+
+      // ✏️ nút viết
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.pink,
+        onPressed: () {
+          setState(() {
+            soBaiViet++;
+          });
+        },
+        child: const Icon(Icons.edit, color: Colors.white),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+
+      // 📱 Bottom menu
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 6,
+        child: SizedBox(
+          height: 60, // ✅ FIX OVERFLOW
+          child: BottomNavigationBar(
+            currentIndex: currentIndex,
+            selectedItemColor: Colors.pink,
+            unselectedItemColor: Colors.grey,
+            type: BottomNavigationBarType.fixed,
+            onTap: (index) {
+              setState(() {
+                currentIndex = index;
+              });
+            },
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+              BottomNavigationBarItem(icon: Icon(Icons.search), label: "Tìm"),
+              BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Thích"),
+              BottomNavigationBarItem(icon: Icon(Icons.person), label: "Tôi"),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCuteBox(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.pink.shade50,
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.pink),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.pink,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
